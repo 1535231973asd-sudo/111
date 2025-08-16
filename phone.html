@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>国际物流运费计算器</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+        }
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 150, 0.1);
+            width: 100%;
+            max-width: 800px;
+            padding: 30px;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 5px;
+            font-size: 28px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+        .card {
+            background: #f8f9ff;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 1px solid #e1e6f9;
+        }
+        .card-title {
+            color: #3498db;
+            margin-top: 0;
+            font-size: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e1e6f9;
+            margin-bottom: 20px;
+        }
+        .input-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .input-group {
+            flex: 1;
+            min-width: 200px;
+        }
+        /* 修改尺寸输入组为纵向布局 */
+        .dimension-group-vertical {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+        }
+        .dimension-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .dimension-label {
+            min-width: 50px;
+            color: #2c3e50;
+            font-weight: 500;
+        }
+        .dimension-input-container {
+            flex: 1;
+            position: relative;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #2c3e50;
+            font-weight: 500;
+        }
+        select, input {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        select:focus, input:focus {
+            border-color: #3498db;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+        .unit {
+            position: relative;
+        }
+        .unit::after {
+            content: "KG";
+            position: absolute;
+            right: 15px;
+            top: 14px;
+            color: #7f8c8d;
+        }
+        button {
+            background: linear-gradient(to right, #3498db, #2c78c5);
+            color: white;
+            border: none;
+            padding: 16px;
+            width: 100%;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 15px;
+            letter-spacing: 1px;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 15px rgba(52, 152, 219, 0.4);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        .result-card {
+            display: none;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border-radius: 10px;
+            padding: 25px;
+            text-align: center;
+            animation: fadeIn 0.5s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .result-title {
+            margin-top: 0;
+            font-size: 22px;
+            margin-bottom: 25px;
+        }
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            text-align: center;
+        }
+        .result-item {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .result-label {
+            font-size: 16px;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+        .result-value {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .result-total {
+            font-size: 42px;
+            font-weight: bold;
+            margin: 20px 0;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .note {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px dashed rgba(255,255,255,0.3);
+        }
+        .price-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            color: #2c3e50;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .price-table th {
+            background: #3498db;
+            color: white;
+            padding: 12px;
+            text-align: left;
+        }
+        .price-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #eee;
+        }
+        .price-table tr:nth-child(even) {
+            background-color: #f8f9ff;
+        }
+        .price-table tr:hover {
+            background-color: #e3f2fd;
+        }
+        .transport-options {
+            display: flex;
+            gap: 15px;
+        }
+        .transport-option {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+        .transport-option.selected {
+            border-color: #3498db;
+            background-color: #e3f2fd;
+        }
+        .transport-option h3 {
+            margin: 0 0 10px 0;
+            color: #2c3e50;
+        }
+        .transport-option p {
+            margin: 0;
+            color: #7f8c8d;
+        }
+        .time-options {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .time-option {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        .time-option.selected {
+            border-color: #3498db;
+            background-color: #3498db;
+            color: white;
+        }
+        .hidden {
+            display: none;
+        }
+        .price-table-container {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #e1e6f9;
+            border-radius: 8px;
+            background: white;
+        }
+        .price-table-title {
+            color: #3498db;
+            font-size: 18px;
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+        /* 新增单位样式 */
+        .cm-unit::after {
+            content: "cm";
+            position: absolute;
+            right: 15px;
+            top: 14px;
+            color: #7f8c8d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>国际物流运费计算器</h1>
+        <p class="subtitle">广州仓库 → 莫斯科仓库专线 | 密度计价系统</p>
+        
+        <div class="card">
+            <h2 class="card-title">货物信息</h2>
+            
+            <div class="input-row">
+                <div class="input-group">
+                    <label for="category">货物品类</label>
+                    <select id="category">
+                        <option value="auto">1. 汽配零件</option>
+                        <option value="hardware">2. 五金材料</option>
+                    </select>
+                </div>
+                
+                <div class="input-group">
+                    <label for="weight">货物重量 (KG)</label>
+                    <div class="unit">
+                        <input type="number" id="weight" min="0.01" step="0.01" placeholder="输入公斤数" value="100">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="input-row">
+                <label>货物尺寸</label>
+                <!-- 修改为纵向布局 -->
+                <div class="dimension-group-vertical">
+                    <div class="dimension-row">
+                        <span class="dimension-label">长：</span>
+                        <div class="dimension-input-container cm-unit">
+                            <input type="number" id="length" min="1" step="0.1" placeholder="长度" value="50">
+                        </div>
+                    </div>
+                    
+                    <div class="dimension-row">
+                        <span class="dimension-label">宽：</span>
+                        <div class="dimension-input-container cm-unit">
+                            <input type="number" id="width" min="1" step="0.1" placeholder="宽度" value="40">
+                        </div>
+                    </div>
+                    
+                    <div class="dimension-row">
+                        <span class="dimension-label">高：</span>
+                        <div class="dimension-input-container cm-unit">
+                            <input type="number" id="height" min="1" step="0.1" placeholder="高度" value="30">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="input-row">
+                <div class="input-group">
+                    <label>运输方式</label>
+                    <div class="transport-options">
+                        <div class="transport-option selected" id="road-transport">
+                            <h3>汽运</h3>
+                            <p>经济实惠，适合非紧急货物</p>
+                        </div>
+                        <div class="transport-option" id="air-transport">
+                            <h3>空运</h3>
+                            <p>快速高效，适合紧急货物</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="input-row">
+                <div class="input-group">
+                    <label>运输时效</label>
+                    <div id="road-time-options">
+                        <div class="time-options">
+                            <div class="time-option selected" data-days="25-32" data-price-key="road-standard">25-32天</div>
+                            <div class="time-option" data-days="15-22" data-price-key="road-express">15-22天</div>
+                        </div>
+                    </div>
+                    <div id="air-time-options" class="hidden">
+                        <div class="time-options">
+                            <div class="time-option selected" data-days="10-15" data-price-key="air-standard">10-15天</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <button id="calculate-btn">计算运费</button>
+        </div>
+        
+        <div id="result" class="result-card">
+            <h2 class="result-title">运费计算结果</h2>
+            
+            <div class="result-grid">
+                <div class="result-item">
+                    <div class="result-label">货物品类</div>
+                    <div id="result-category" class="result-value">-</div>
+                </div>
+                <div class="result-item">
+                    <div class="result-label">运输方式</div>
+                    <div id="result-transport" class="result-value">-</div>
+                </div>
+                <div class="result-item">
+                    <div class="result-label">运输时效</div>
+                    <div id="result-time" class="result-value">-</div>
+                </div>
+                <div class="result-item">
+                    <div class="result-label">密度</div>
+                    <div id="result-density" class="result-value">-</div>
+                </div>
+                <div class="result-item">
+                    <div class="result-label">单价</div>
+                    <div id="result-rate" class="result-value">-</div>
+                </div>
+                <div class="result-item">
+                    <div class="result-label">重量</div>
+                    <div id="result-weight" class="result-value">-</div>
+                </div>
+            </div>
+            
+            <div class="result-total">$<span id="result-total">0.00</span> USD</div>
+            
+            <div class="note">
+                注：运费已包含全部运输及操作费用，最终价格以实际装运确认为准
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2 class="card-title">当前单价对照表</h2>
+            <div class="price-table-container">
+                <h3 class="price-table-title" id="price-table-title">汽配零件 - 汽运标准(25-32天)</h3>
+                <table class="price-table" id="current-price-table">
+                    <thead>
+                        <tr>
+                            <th>密度区间 (KG/M³)</th>
+                            <th>单价 ($/KG)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="price-table-body">
+                        <!-- 表格由JS动态生成 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 完整价格表数据结构
+        const priceTables = {
+            // 汽配零件价格表
+            auto: {
+                // 汽运标准时效(25-32天)
+                "road-standard": [
+                    { min: 0, max: 100, price: 4.80 },
+                    { min: 100, max: 110, price: 2.80 },
+                    { min: 110, max: 120, price: 3.60 },
+                    { min: 120, max: 130, price: 3.00 },
+                    { min: 130, max: 140, price: 2.40 },
+                    { min: 140, max: 150, price: 2.40 },
+                    { min: 150, max: 160, price: 2.40 },
+                    { min: 160, max: 170, price: 2.40 },
+                    { min: 170, max: 180, price: 2.40 },
+                    { min: 180, max: 190, price: 2.40 },
+                    { min: 190, max: 200, price: 2.40 },
+                    { min: 200, max: 250, price: 2.40 },
+                    { min: 250, max: 300, price: 2.40 },
+                    { min: 300, max: 350, price: 1.80 },
+                    { min: 350, max: 400, price: 2.40 },
+                    { min: 400, max: 600, price: 2.40 },
+                    { min: 600, max: 800, price: 2.40 },
+                    { min: 800, max: 1000, price: 2.40 },
+                    { min: 1000, max: 10000, price: 2.40 }
+                    
+                ],
+                // 汽运快速时效(15-22天)
+                "road-express": [
+                    { min: 0, max: 100, price: 5.00 },
+                    { min: 100, max: 200, price: 4.40 },
+                    { min: 200, max: 300, price: 3.80 },
+                    { min: 300, max: 400, price: 3.20 },
+                    { min: 400, max: 500, price: 2.60 },
+                    { min: 500, max: 10000, price: 2.00 }
+                ],
+                // 空运
+                "air-standard": [
+                    { min: 0, max: 100, price: 8.50 },
+                    { min: 100, max: 200, price: 7.80 },
+                    { min: 200, max: 300, price: 6.90 },
+                    { min: 300, max: 400, price: 5.80 },
+                    { min: 400, max: 500, price: 4.60 },
+                    { min: 500, max: 10000, price: 3.50 }
+                ]
+            },
+            // 五金材料价格表
+            hardware: {
+                // 汽运标准时效(25-32天)
+                "road-standard": [
+                    { min: 0, max: 150, price: 5.20 },
+                    { min: 150, max: 300, price: 4.50 },
+                    { min: 300, max: 450, price: 3.80 },
+                    { min: 450, max: 600, price: 3.20 },
+                    { min: 600, max: 800, price: 2.60 },
+                    { min: 800, max: 10000, price: 2.00 }
+                ],
+                // 汽运快速时效(15-22天)
+                "road-express": [
+                    { min: 0, max: 150, price: 5.50 },
+                    { min: 150, max: 300, price: 4.80 },
+                    { min: 300, max: 450, price: 4.10 },
+                    { min: 450, max: 600, price: 3.50 },
+                    { min: 600, max: 800, price: 2.90 },
+                    { min: 800, max: 10000, price: 2.30 }
+                ],
+                // 空运
+                "air-standard": [
+                    { min: 0, max: 150, price: 9.00 },
+                    { min: 150, max: 300, price: 8.20 },
+                    { min: 300, max: 450, price: 7.30 },
+                    { min: 450, max: 600, price: 6.20 },
+                    { min: 600, max: 800, price: 5.00 },
+                    { min: 800, max: 10000, price: 4.00 }
+                ]
+            }
+        };
+        
+        // 当前选择的配置
+        let currentConfig = {
+            category: "auto",
+            transport: "road",
+            timeOption: "road-standard"
+        };
+        
+        // 当前运输时效显示文本
+        let selectedTimeText = "25-32天";
+
+        // 页面加载时初始化
+        window.addEventListener('DOMContentLoaded', function() {
+            // 绑定计算按钮事件
+            document.getElementById('calculate-btn').addEventListener('click', calculateFreight);
+            
+            // 绑定品类切换事件
+            document.getElementById('category').addEventListener('change', function() {
+                currentConfig.category = this.value;
+                updatePriceTable();
+                calculateFreight();
+            });
+            
+            // 绑定运输方式切换事件
+            document.getElementById('road-transport').addEventListener('click', function() {
+                selectTransport('road');
+            });
+            
+            document.getElementById('air-transport').addEventListener('click', function() {
+                selectTransport('air');
+            });
+            
+            // 绑定运输时效选择事件
+            document.querySelectorAll('.time-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    // 清除所有选中状态
+                    this.parentElement.querySelectorAll('.time-option').forEach(el => {
+                        el.classList.remove('selected');
+                    });
+                    
+                    // 设置当前选中
+                    this.classList.add('selected');
+                    
+                    // 更新时效配置
+                    currentConfig.timeOption = this.dataset.priceKey;
+                    selectedTimeText = this.dataset.days + '天';
+                    
+                    // 更新价格表和计算
+                    updatePriceTable();
+                    calculateFreight();
+                });
+            });
+            
+            // 绑定输入框回车事件
+            const inputFields = ['weight', 'length', 'width', 'height'];
+            inputFields.forEach(id => {
+                document.getElementById(id).addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        calculateFreight();
+                    }
+                });
+            });
+            
+            // 初始渲染价格表
+            updatePriceTable();
+            
+            // 初始计算一次
+            calculateFreight();
+        });
+        
+        // 选择运输方式
+        function selectTransport(type) {
+            currentConfig.transport = type;
+            
+            // 更新UI
+            document.getElementById('road-transport').classList.toggle('selected', type === 'road');
+            document.getElementById('air-transport').classList.toggle('selected', type === 'air');
+            
+            // 显示对应的时效选项
+            document.getElementById('road-time-options').style.display = 
+                type === 'road' ? 'block' : 'none';
+            document.getElementById('air-time-options').style.display = 
+                type === 'air' ? 'block' : 'none';
+            
+            // 重置时效选择
+            if (type === 'road') {
+                // 选择第一个汽运时效
+                const firstRoadOption = document.querySelector('#road-time-options .time-option');
+                firstRoadOption.classList.add('selected');
+                currentConfig.timeOption = firstRoadOption.dataset.priceKey;
+                selectedTimeText = firstRoadOption.dataset.days + '天';
+            } else {
+                // 选择空运时效
+                const airOption = document.querySelector('#air-time-options .time-option');
+                airOption.classList.add('selected');
+                currentConfig.timeOption = airOption.dataset.priceKey;
+                selectedTimeText = airOption.dataset.days + '天';
+            }
+            
+            // 更新价格表和计算
+            updatePriceTable();
+            calculateFreight();
+        }
+        
+        // 更新显示的价格表
+        function updatePriceTable() {
+            const priceTable = priceTables[currentConfig.category][currentConfig.timeOption];
+            const tableBody = document.getElementById('price-table-body');
+            
+            // 更新表格标题
+            const categoryName = currentConfig.category === 'auto' ? '汽配零件' : '五金材料';
+            const transportType = currentConfig.transport === 'road' ? '汽运' : '空运';
+            const timeType = currentConfig.timeOption.includes('express') ? '快速' : '标准';
+            
+            document.getElementById('price-table-title').textContent = 
+                `${categoryName} - ${transportType}${timeType}(${selectedTimeText})`;
+            
+            // 清空表格
+            tableBody.innerHTML = '';
+            
+            // 填充新数据
+            priceTable.forEach(item => {
+                const row = document.createElement('tr');
+                
+                // 特殊处理最大值显示
+                const range = item.max === 10000 ? 
+                    `≥ ${item.min}` : 
+                    `${item.min} - ${item.max}`;
+                
+                row.innerHTML = `
+                    <td>${range}</td>
+                    <td>$${item.price.toFixed(2)}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+        
+        // 核心运费计算函数
+        function calculateFreight() {
+            try {
+                // 获取输入值
+                const weight = parseFloat(document.getElementById('weight').value);
+                const length = parseFloat(document.getElementById('length').value);
+                const width = parseFloat(document.getElementById('width').value);
+                const height = parseFloat(document.getElementById('height').value);
+                
+                // 验证输入
+                if (isNaN(weight) || weight <= 0) {
+                    alert("请输入有效的货物重量（大于0的数字）");
+                    document.getElementById('weight').focus();
+                    return;
+                }
+                
+                if (isNaN(length) || length <= 0) {
+                    alert("请输入有效的货物长度（大于0的数字）");
+                    document.getElementById('length').focus();
+                    return;
+                }
+                
+                if (isNaN(width) || width <= 0) {
+                    alert("请输入有效的货物宽度（大于0的数字）");
+                    document.getElementById('width').focus();
+                    return;
+                }
+                
+                if (isNaN(height) || height <= 0) {
+                    alert("请输入有效的货物高度（大于0的数字）");
+                    document.getElementById('height').focus();
+                    return;
+                }
+                
+                // 厘米转米
+                const lengthM = length / 100;
+                const widthM = width / 100;
+                const heightM = height / 100;
+                
+                // 计算体积（立方米）
+                const volume = lengthM * widthM * heightM;
+                
+                // 计算密度（KG/M³）
+                const density = weight / volume;
+                
+                // 获取当前价格表
+                const priceTable = priceTables[currentConfig.category][currentConfig.timeOption];
+                
+                // 查找匹配的单价
+                let matchedPrice = 0;
+                for (const item of priceTable) {
+                    if (density >= item.min && density < item.max) {
+                        matchedPrice = item.price;
+                        break;
+                    }
+                }
+                
+                // 如果密度超过了最大值
+                if (matchedPrice === 0 && density >= priceTable[priceTable.length-1].min) {
+                    matchedPrice = priceTable[priceTable.length-1].price;
+                }
+                
+                // 计算总运费
+                const total = weight * matchedPrice;
+                
+                // 显示结果
+                document.getElementById('result-category').textContent = 
+                    currentConfig.category === 'auto' ? '汽配零件' : '五金材料';
+                    
+                document.getElementById('result-transport').textContent = 
+                    currentConfig.transport === 'road' ? '汽运' : '空运';
+                    
+                document.getElementById('result-time').textContent = selectedTimeText;
+                    
+                document.getElementById('result-density').textContent = 
+                    `${density.toFixed(2)} KG/M³`;
+                    
+                document.getElementById('result-rate').textContent = 
+                    `$${matchedPrice.toFixed(2)}/KG`;
+                    
+                document.getElementById('result-weight').textContent = 
+                    `${weight.toFixed(2)} KG`;
+                    
+                document.getElementById('result-total').textContent = 
+                    total.toFixed(2);
+                    
+                // 显示结果卡片
+                document.getElementById('result').style.display = 'block';
+                
+                // 滚动到结果区域
+                document.getElementById('result').scrollIntoView({ 
+                    behavior: 'smooth' 
+                });
+            } catch (error) {
+                console.error("计算运费时发生错误:", error);
+                alert("计算发生错误，请检查输入数据并重试。错误详情：" + error.message);
+            }
+        }
+    </script>
+</body>
+</html>
